@@ -5,9 +5,11 @@
 ## Cấu trúc repo
 
 ```
-day26-mcp/
+Day26-Track3-2A202601841-NguyenQuocHung/
 ├── README.md                ← Bạn đang đọc file này
 ├── requirements.txt         ← pip install -r requirements.txt
+├── start_lab04.ps1          ← Script khởi động Lab 04 (PowerShell)
+├── SUBMISSION.md            ← Báo cáo nộp bài
 │
 ├── 01-function-calling/     ← Bước 1: Function Calling thuần (Gemini SDK)
 │   ├── README.md
@@ -18,13 +20,31 @@ day26-mcp/
 │   ├── weather_server.py
 │   └── weather_client.py
 │
-└── 03-production/           ← Bước 3: Auth, Tool Registry, Versioning
+├── 03-production/           ← Bước 3: Auth, Tool Registry, Versioning
+│   ├── README.md
+│   ├── auth_server.py
+│   ├── auth_client.py
+│   ├── registry.json
+│   ├── registry_client.py
+│   └── versioned_server.py
+│
+└── 04-lab/                  ← Bước 4: Lab hoàn chỉnh - ADK Agent + MCP Server
     ├── README.md
-    ├── auth_server.py
-    ├── auth_client.py
-    ├── registry.json
-    ├── registry_client.py
-    └── versioned_server.py
+    ├── mcp-server/          # MCP Server (FastMCP + Streamable HTTP)
+    │   ├── weather.py       # Server chính: 5 tools, Auth, Versioning, server://info
+    │   ├── pyproject.toml
+    │   ├── .env.example
+    │   ├── Dockerfile
+    │   └── README.md
+    │
+    └── mcp-client/          # ADK Client (Google Agent Development Kit)
+        ├── weather_agent/
+        │   ├── agent.py     # Agent đọc server://info, chọn tool v2
+        │   └── __init__.py
+        ├── pyproject.toml
+        ├── .env             # GOOGLE_API_KEY, GEMINI_API_KEY
+        ├── verify_setup.py  # Kiểm tra setup
+        └── README.md
 ```
 
 ## Quick start
@@ -229,4 +249,91 @@ Chi tiết + code cho cả 3 phần: xem [`03-production/README.md`](03-producti
 
 ---
 
+## [Lab 04 — Weather Agent với MCP Server Production-Ready](04-lab/)
+
+Lab hoàn chỉnh kết hợp tất cả kiến thức: **MCP Server production** (Auth + Versioning + Metadata) + **ADK Agent** thông minh đọc metadata trước khi gọi tool.
+
+### Kiến trúc
+
+```
+┌─────────────────┐   Streamable HTTP    ┌─────────────────┐      REST       ┌─────────────────┐
+│   ADK Agent     │ ──────────────────── │   MCP Server    │ ─────────────── │  WeatherAPI.com │
+│  (mcp-client)   │   localhost:8085/mcp │  (mcp-server)   │                 │                 │
+└─────────────────┘                      └─────────────────┘                 └─────────────────┘
+```
+
+### Tính năng Production-Ready trong MCP Server (`04-lab/mcp-server/weather.py`)
+
+| Tính năng | Implementation |
+|-----------|----------------|
+| **Transport** | Streamable HTTP (`transport="streamable-http"`) |
+| **Authentication** | Bearer token (`MCP_AUTH_TOKEN` env, scopes `weather:read`, `weather:forecast`) |
+| **Versioning** | 5 tools: v1 (deprecated) + v2 (JSON, optional params) song song |
+| **Metadata** | Resource `server://info` — version, tools, deprecation, migration guide |
+| **Health** | Tool `health_check()` |
+
+### ADK Agent thông minh (`04-lab/mcp-client/weather_agent/agent.py`)
+
+Agent **tự động đọc `server://info`** khi khởi động:
+1. Fetch metadata từ MCP Server
+2. Phân tích tools: ưu tiên v2 (`current` status), bỏ qua v1 (`deprecated`)
+3. Log danh sách tool được chọn
+4. Sử dụng tool v2 cho user queries
+
+### Quick Start Lab 04
+
+```bash
+# 1. Cài đặt dependencies
+cd 04-lab/mcp-server && uv sync
+cd ../mcp-client && uv sync
+
+# 2. Cấu hình environment
+# Server
+cp 04-lab/mcp-server/.env.example 04-lab/mcp-server/.env
+# Edit .env: điền WEATHERAPI_KEY từ weatherapi.com
+
+# Client
+echo "GOOGLE_API_KEY=your_gemini_key" > 04-lab/mcp-client/.env
+
+# 3. Chạy (2 terminal) hoặc dùng script PowerShell
+# Terminal 1 - MCP Server:
+cd 04-lab/mcp-server && uv run python weather.py
+
+# Terminal 2 - ADK Web:
+cd 04-lab/mcp-client && uv run adk web
+
+# 4. Mở http://localhost:8000 → chọn weather_agent → chat
+```
+
+### Script khởi động tự động (Windows PowerShell)
+
+```powershell
+# Tự load .env, kill port cũ, start cả 2 service
+.\start_lab04.ps1
+```
+
+### Test Authentication
+
+```bash
+# Token đúng
+curl -X POST http://localhost:8085/mcp -H "Authorization: Bearer dev-token-abc123" -d '{"jsonrpc":"2.0","id":1,"method":"initialize",...}'
+
+# Token sai → 403
+# Thiếu token → 401
+```
+
+### Test Versioning
+
+```bash
+# Đọc metadata
+curl -X POST http://localhost:8085/mcp -H "Authorization: Bearer dev-token-abc123" -d '{"jsonrpc":"2.0","id":1,"method":"resources/read","params":{"uri":"server://info"}}'
+
+# Gọi v2 tool (JSON + optional params)
+curl -X POST http://localhost:8085/mcp -H "Authorization: Bearer dev-token-abc123" -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"get_current_weather_v2","arguments":{"city":"Hanoi","include_forecast":true,"units":"celsius"}}}'
+```
+
+---
+
 **Tóm lại:** Function Calling là *cơ chế model gọi công cụ*; MCP là *chuẩn để kết nối model với các công cụ đó* — và MCP thực chất dùng Function Calling làm nền tảng để hoạt động.
+
+Lab 04 minh hoạ **full production MCP stack**: Server có Auth + Versioning + Metadata, Agent đọc metadata tự chọn tool phù hợp.
