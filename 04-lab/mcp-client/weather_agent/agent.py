@@ -5,6 +5,7 @@ Reads server metadata (server://info) before using tools for optimal version sel
 import asyncio
 import json
 import logging
+import os
 from google.adk import Agent
 from google.adk.tools.mcp_tool.mcp_toolset import McpToolset, StreamableHTTPConnectionParams
 from mcp import ClientSession
@@ -16,11 +17,13 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 MCP_SERVER_URL = "http://localhost:8085/mcp"
+MCP_AUTH_TOKEN = os.getenv("MCP_AUTH_TOKEN", "dev-token-abc123")
 
-async def fetch_server_metadata(url: str) -> dict:
+async def fetch_server_metadata(url: str, auth_token: str) -> dict:
     """Fetch server metadata from server://info resource."""
     try:
-        async with httpx.AsyncClient() as http_client:
+        headers = {"Authorization": f"Bearer {auth_token}"}
+        async with httpx.AsyncClient(headers=headers) as http_client:
             async with streamable_http_client(url, http_client=http_client) as (read, write, _):
                 async with ClientSession(read, write) as session:
                     await session.initialize()
@@ -60,9 +63,11 @@ logger.info(f"📡 MCP Server: {MCP_SERVER_URL}")
 
 try:
     # Create connection parameters for the remote MCP server
+    auth_headers = {"Authorization": f"Bearer {MCP_AUTH_TOKEN}"}
     connection_params = StreamableHTTPConnectionParams(
         url=MCP_SERVER_URL,
         timeout=30.0,
+        headers=auth_headers,
     )
     
     # Create the MCP toolset - this will connect to the remote server
@@ -74,7 +79,7 @@ try:
     
     # Fetch server metadata to select best tool versions
     logger.info("📥 Fetching server metadata (server://info)...")
-    metadata = asyncio.run(fetch_server_metadata(MCP_SERVER_URL))
+    metadata = asyncio.run(fetch_server_metadata(MCP_SERVER_URL, MCP_AUTH_TOKEN))
     
     if metadata:
         best_tools = select_best_tools(metadata)
