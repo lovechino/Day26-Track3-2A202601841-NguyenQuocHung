@@ -28,10 +28,6 @@ All 4 modules completed and verified. The ADK Weather Agent with remote MCP Serv
 
 ## Live Services (Ready for Demo)
 
-| Service | PID | URL | Configuration |
-|---------|-----|-----|---------------|
-| **MCP Server** | 13904 | `http://localhost:8085/mcp` | FastMCP + WeatherAPI key `f23900f01884469ebf750911262808` |
-| **ADK Web UI** | 4276 | `http://127.0.0.1:8000` | Google ADK + Gemini key `AIzaSyBv7arFN09UPCSa9fWvMSygZTI5OXMHRik` (no IP restriction) |
 
 **MCP Tools exposed:**
 - `get_current_weather(city)` — real-time weather from WeatherAPI.com
