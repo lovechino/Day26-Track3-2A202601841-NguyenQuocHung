@@ -1,0 +1,14 @@
+WARNING: The --reload flag is not supported on Windows because it forces Uvicorn to use SelectorEventLoop, which does not support subprocesses (needed for executing tools). Forcing --no-reload.
+C:\Users\quoch\AppData\Local\Programs\Python\Python310\lib\site-packages\requests\__init__.py:113: RequestsDependencyWarning: urllib3 (2.6.3) or chardet (7.2.0)/charset_normalizer (3.4.4) doesn't match a supported version!
+  warnings.warn(
+2026-08-28 12:11:00,422 - INFO - service_factory.py:266 - Using in-memory memory service
+2026-08-28 12:11:00,426 - INFO - local_storage.py:89 - Using per-agent session storage rooted at E:\AIlearn\Day26-Track3-2A202601841-NguyenQuocHung\04-lab\mcp-client
+2026-08-28 12:11:00,433 - INFO - local_storage.py:121 - Using per-agent artifact storage rooted at E:\AIlearn\Day26-Track3-2A202601841-NguyenQuocHung\04-lab\mcp-client
+C:\Users\quoch\AppData\Local\Programs\Python\Python310\lib\site-packages\google\adk\cli\fast_api.py:263: UserWarning: [EXPERIMENTAL] InMemoryCredentialService: This feature is experimental and may change or be removed in future versions without notice. It may introduce breaking changes at any time.
+  credential_service = InMemoryCredentialService()
+C:\Users\quoch\AppData\Local\Programs\Python\Python310\lib\site-packages\google\adk\auth\credential_service\in_memory_credential_service.py:33: UserWarning: [EXPERIMENTAL] BaseCredentialService: This feature is experimental and may change or be removed in future versions without notice. It may introduce breaking changes at any time.
+  super().__init__()
+INFO:     Started server process [804]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)

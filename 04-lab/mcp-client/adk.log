@@ -1,0 +1,14 @@
+Help improve the ADK (CLI and Web UI) by allowing Google to collect pseudonymized usage data?
+
+What is collected: Names of subcommands and flags (no user-provided values or arguments), execution metrics (duration, exit state), environment specs (OS, Python version), and aggregated Web UI feature interactions. No personally identifiable information (PII) is collected.
+
+This is OFF by default. You can opt out at any time using the 'adk telemetry disable' command or Web UI user settings.
+
+Enable telemetry? [Y/n]: 
+
++-----------------------------------------------------------------------------+
+| ADK Web Server started                                                      |
+|                                                                             |
+| For local testing, access at http://127.0.0.1:8000.                         |
++-----------------------------------------------------------------------------+
+
